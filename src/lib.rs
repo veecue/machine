@@ -493,7 +493,6 @@ fn impl_machine(m: &Machine) -> (&Ident, syn::export::TokenStream) {
     let toks = quote! {
       #(#set_attrs)*
       pub enum #machine_name {
-        Error,
         #(#variants_names(#structs_names)),*
       }
     };
@@ -563,10 +562,6 @@ fn impl_machine(m: &Machine) -> (&Ident, syn::export::TokenStream) {
     let toks = quote! {
       impl #machine_name {
         #(#methods)*
-
-        pub fn error() -> #machine_name {
-          #machine_name::Error
-        }
       }
     };
 
@@ -786,7 +781,7 @@ pub fn transitions(input: proc_macro::TokenStream) -> syn::export::TokenStream {
           pub fn #fn_ident #type_arg_toks(self, input: #msg) -> #machine_name {
             match self {
               #(#mv)*
-              _ => #machine_name::Error,
+              _ => self,
             }
           }
         }
@@ -823,7 +818,7 @@ pub fn transitions(input: proc_macro::TokenStream) -> syn::export::TokenStream {
       pub fn execute #type_arg_toks(self, input: #message_enum_ident #type_arg_toks) -> #machine_name {
         match input {
           #(#matches)*
-          _ => #machine_name::Error,
+          _ => self,
         }
       }
     };
