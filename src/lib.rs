@@ -461,8 +461,29 @@ pub fn machine(input: proc_macro::TokenStream) -> syn::export::TokenStream {
 fn impl_machine(m: &Machine) -> (&Ident, syn::export::TokenStream) {
     let Machine { attributes, data } = m;
     let ast = data;
+    let mut ignore_errors = false;
     //println!("attributes: {:?}", attributes);
     //println!("ast: {:#?}", ast);
+    for attr in attributes {
+      if !attr.path.is_ident("machine") {
+        continue;
+      }
+      
+      if let syn::Meta::List(metas) = attr.parse_meta().expect("Error parsing attr") {
+        for meta in metas.nested.into_iter() {
+          if let syn::NestedMeta::Meta(syn::Meta::Word(word)) = meta {
+            if word == "IgnoreErrors" {
+              ignore_errors = true;
+              println!("Ignoring errors!");
+            }
+          }
+        }
+      } else {
+        // error
+      }
+    }
+
+    let set_attrs : &Vec<&syn::Attribute> = &attributes.iter().filter(|attr|!attr.path.is_ident("machine")).collect();
 
     let machine_name = &ast.ident;
     let variants_names = &ast.variants.iter().map(|v| &v.ident).collect::<Vec<_>>();
@@ -470,7 +491,7 @@ fn impl_machine(m: &Machine) -> (&Ident, syn::export::TokenStream) {
 
     // define the state enum
     let toks = quote! {
-      #(#attributes)*
+      #(#set_attrs)*
       pub enum #machine_name {
         Error,
         #(#variants_names(#structs_names)),*
@@ -498,7 +519,7 @@ fn impl_machine(m: &Machine) -> (&Ident, syn::export::TokenStream) {
             .collect::<Vec<_>>();
 
         let toks = quote! {
-          #(#attributes)*
+          #(#set_attrs)*
           pub struct #name {
             #(#fields),*
           }
