@@ -474,7 +474,7 @@ fn impl_machine(m: &Machine) -> (&Ident, syn::export::TokenStream) {
           if let syn::NestedMeta::Meta(syn::Meta::Word(word)) = meta {
             if word == "IgnoreErrors" {
               ignore_errors = true;
-              println!("Ignoring errors!");
+              //println!("Ignoring errors!");
             }
           }
         }
